@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/pin", "destination": "/api/clips?op=pin" },
+    { "source": "/unpin", "destination": "/api/clips?op=unpin" }
+  ],
+  "crons": [{ "path": "/api/cleanup", "schedule": "0 4 * * *" }],
+  "functions": { "api/*.js": { "maxDuration": 10 } }
+}

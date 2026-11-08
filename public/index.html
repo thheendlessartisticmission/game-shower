@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Music Gameshow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f3efff;--panel:#fff;--ink:#1b1033;--mute:#6b5f86;--line:#d9cff5;--gold:#f5b700;--a:#0f9d8f;--b:#e8444f;--c:#6c4cf1;--on:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#150b2b;--panel:#231445;--ink:#f6f1ff;--mute:#a99bd0;--line:#3a2a66;--gold:#ffc83d;--a:#19c3b1;--b:#ff6b73;--c:#8f78ff}}
+:root[data-theme="dark"]{--bg:#150b2b;--panel:#231445;--ink:#f6f1ff;--mute:#a99bd0;--line:#3a2a66;--gold:#ffc83d;--a:#19c3b1;--b:#ff6b73;--c:#8f78ff}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif;min-height:100vh}
+#app{max-width:880px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,h3{font-family:Bungee,Impact,sans-serif;font-weight:400;margin:0;letter-spacing:.5px}
+h1{font-size:clamp(28px,6vw,44px);color:var(--gold);line-height:1.1}
+h2{font-size:22px;margin-bottom:12px}h3{font-size:16px;margin-bottom:6px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+.q{border:2px solid var(--line);border-radius:12px;padding:12px;margin-top:14px;background:var(--bg)}
+label{display:block;font-weight:600;font-size:14px;margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:9px 10px}
+.q input,.q textarea{background:var(--panel)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+#code{font-family:Bungee,Impact,sans-serif;font-size:28px;text-transform:uppercase;text-align:center;letter-spacing:6px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+button{font:inherit;font-weight:700;cursor:pointer;border:0;border-radius:10px;padding:11px 18px;background:var(--c);color:var(--on)}
+button.gold{background:var(--gold);color:#1b1033}
+button.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+button.ok{background:var(--a)}button.no{background:var(--b)}
+button.del{background:transparent;color:var(--b);border:2px solid var(--b)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ent{border-radius:12px;padding:12px;color:#fff;text-align:center;border:3px solid transparent}
+.ent b{display:block;font-family:Bungee,Impact,sans-serif;font-size:32px;line-height:1.1}
+.ent small{display:block;opacity:.9}
+.ent.live{border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,183,0,.35)}
+.e0{background:var(--a)}.e1{background:var(--b)}
+button.e0,button.e1{color:#fff}
+.hint{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:10px;background:var(--bg);border:2px solid var(--line);margin:8px 0;font-size:20px;font-weight:600}
+.hint.hid{color:var(--mute);font-weight:400;font-size:15px;border-style:dashed}
+.hint progress{width:100%;min-width:160px;height:8px;accent-color:var(--gold);display:block;margin-top:6px}
+.pbtn{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;padding:0;font-size:18px;flex:none;background:var(--gold);color:#1b1033}
+.answer{font-family:Bungee,Impact,sans-serif;font-size:clamp(26px,6vw,40px);color:var(--gold);text-align:center;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pts{font-family:Bungee,Impact,sans-serif;color:var(--gold);font-size:20px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.mute{color:var(--mute);font-size:14px}
+.rd{border-top:2px solid var(--line);padding-top:8px;margin-top:12px}
+.note{font-size:13px;color:var(--mute);margin:6px 0}
+.warn{color:var(--b);font-weight:700}
+.rm{padding:6px 12px;font-size:13px}
+.pre{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-top:2px solid var(--line)}
+.pre:first-of-type{border-top:0}
+.okmsg{color:var(--a);font-weight:700}
+.sp{display:flex;justify-content:space-between;align-items:center;gap:10px}
+audio{width:100%;margin-top:6px}
+#ov{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:20px;background:rgba(10,5,25,.7)}
+#ov.on{display:grid}
+.ovb{background:var(--panel);border:3px solid var(--gold);border-radius:18px;padding:22px;max-width:460px;width:100%;text-align:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.ovb.t0{border-color:var(--a)}.ovb.t1{border-color:var(--b)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.ovb{animation:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ov" role="dialog" aria-modal="true" aria-label="Answer"></div>
+<script>
+(()=>{'use strict';
+const QRV=()=>({sound:'default',text:'',url:'',name:''});
+const newQ=(n=3)=>({answers:'',reveal:QRV(),hints:Array.from({length:n},(_,i)=>({name:'',url:'',pts:n-i}))});
+const ptsOf=(q,j)=>{const p=q.hints[j].pts,v=Number(p);return p===''||p==null||!Number.isFinite(v)?q.hints.length-j:Math.max(0,Math.round(v));};
+// Reveal settings: one slot per kind of reveal (win = points scored, miss = steal missed, none = revealed with no points)
+const FXD=()=>({win:{sound:'win',text:'',url:'',name:''},miss:{sound:'miss',text:'',url:'',name:''},none:{sound:'none',text:'',url:'',name:''}});
+const FXL={win:['Correct answer','Plays when a team scores or steals points.'],miss:['Missed steal','Plays when the steal attempt is wrong.'],none:['Answer revealed (no points)','Plays when you reveal the answer without awarding points.']};
+const FXT={win:'{team} was awarded {pts} points.',miss:'The steal missed. No points.',none:'Answer revealed. No points.'};
+let C={rounds:[{title:'Round 1',questions:[newQ()]}],fx:FXD()};   // host-only config (answers stay in the host's browser)
+const fixFx=()=>{C.rounds.forEach(r=>r.questions.forEach(q=>{q.reveal=Object.assign(QRV(),q.reveal||{});}));const d=FXD();C.fx=C.fx||{};Object.keys(d).forEach(k=>{C.fx[k]=Object.assign(d[k],C.fx[k]||{});});};
+let G=null,PL=[],plReady=false,role=null,code='',screen='edit',myId='',myName='',db=null,assets=null,ready=false,lastSeq=null,audioOn=false,saveT=null,joinErr='',noq=false,subs=[],presetId=null,presetName='',psMsg='',pending=0,uploading=0;
+const AUD=new Audio(),FX=new Audio(),SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/\p{M}/gu,'').replace(/&/g,' and ').replace(/['’]/g,'').replace(/[^\p{L}\p{N} ]/gu,' ').replace(/\s+/g,' ').trim().replace(/^the /,'');
+const ans=q=>q.answers.split('\n').map(s=>s.trim()).filter(Boolean);
+const $app=document.getElementById('app');
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){}return null;};
+
+// ---------- Server connection (tiny document store over HTTP + polling) ----------
+// Same interface as before (doc().get/set/onSnapshot, collection().onSnapshot), but runs on
+// serverless functions: writes are POSTed to /api/db, and subscriptions poll about once a second.
+// The server keeps one version number per game, so an unchanged poll costs a single Redis read.
+function makeDb(){
+  const subs=new Map(),vers={};
+  let sid=0,wq=Promise.resolve(),busy=0,epoch=0,timer=null,polling=false;
+  const snapDoc=d=>({exists:d!=null,data:()=>d});
+  const post=b=>fetch('/api/db',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
+    .then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.json();});
+  const kick=ms=>{clearTimeout(timer);timer=setTimeout(poll,ms);};
+  const part=p=>p.split('/')[2]||'game',codeOf=p=>p.split('/')[1];
+  // Writes go out one at a time, in order. After each one we poll again soon.
+  const write=(path,data)=>{
+    busy++;
+    const p=wq.then(()=>post({t:'set',path,data})).catch(()=>{}).then(()=>{busy--;epoch++;kick(120);});
+    wq=p;return p;
+  };
+  const get=path=>{
+    const t=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+    return Promise.race([wq.then(()=>post({t:'get',path})).then(r=>snapDoc(r.data)),t]);
+  };
+  function dispatch(code,r){
+    subs.forEach(s=>{
+      if(codeOf(s.path)!==code)return;
+      const pt=part(s.path),d=pt==='game'?r.game:r[pt];
+      if(d===undefined)return;
+      const j=JSON.stringify(d);if(j===s.last)return;s.last=j;
+      s.cb(s.kind==='doc'?snapDoc(d):{docs:d.map(x=>({data:()=>x}))});
+    });
+  }
+  async function poll(){
+    if(polling)return;polling=true;
+    try{
+      const codes=new Set([...subs.values()].map(s=>codeOf(s.path)));
+      for(const c of codes){
+        const need=[...new Set([...subs.values()].filter(s=>codeOf(s.path)===c).map(s=>part(s.path)))];
+        const v0=vers[c]===undefined?-1:vers[c],ep=epoch;
+        let r;try{r=await post({t:'poll',code:c,since:v0,need});}catch(e){continue;}
+        if(ep!==epoch||busy)continue;   // a write happened meanwhile: this answer may be stale, ask again
+        vers[c]=r.ver;
+        if(r.game!==undefined||r.players!==undefined||r.moves!==undefined)dispatch(c,r);
+        if([...subs.values()].some(s=>codeOf(s.path)===c&&s.last===undefined))vers[c]=-1;   // a new subscriber still needs its first snapshot
+      }
+    }finally{polling=false;if(subs.size)kick(1000);}
+  }
+  const sub=(path,kind,cb)=>{
+    const id=++sid;subs.set(id,{path,kind,cb,last:undefined});
+    vers[codeOf(path)]=-1;kick(0);
+    return()=>{subs.delete(id);};
+  };
+  const doc=p=>({get:()=>get(p),set:d=>write(p,d),onSnapshot:cb=>sub(p,'doc',cb)});
+  return{doc,collection:p=>({doc:id=>doc(p+'/'+id),onSnapshot:cb=>sub(p,'col',cb)})};
+}
+
+function flat(){const f=[];C.rounds.forEach((r,ri)=>r.questions.forEach((q,qi)=>{if(q.hints.length)f.push({ri,qi,q,title:r.title||'Round '+(ri+1)});}));return f;}
+const cur=()=>flat()[G.r];
+const hintUrls=()=>cur().q.hints.map(h=>h.url);
+const qLabel=f=>f.title+' · Question '+(f.qi+1);
+const avail=()=>G.pts&&G.pts[G.shown-1]!=null?G.pts[G.shown-1]:G.numHints-G.shown+1;
+
+// ---------- Audio ----------
+function stopAudio(){try{AUD.pause();}catch(e){}}
+function applyAudio(seq,idx,urls){
+  if(seq===lastSeq)return;
+  const first=lastSeq===null;lastSeq=seq;
+  if(first&&role!=='host')return;
+  stopAudio();
+  if(idx>=0&&urls[idx]&&audioOn){AUD.src=urls[idx];AUD.play().catch(()=>{});}
+}
+function paint(){
+  const c=AUD.src&&!AUD.paused?AUD.src:'';
+  document.querySelectorAll('[data-url]').forEach(el=>{
+    const on=c===new URL(el.dataset.url,location.href).href;
+    el.querySelector('.pbtn').textContent=on?'■':'▶';
+    el.querySelector('progress').value=on&&AUD.duration?AUD.currentTime/AUD.duration:0;
+  });
+}
+['play','pause','ended','timeupdate'].forEach(ev=>AUD.addEventListener(ev,paint));
+let AC=null;
+document.addEventListener('pointerdown',()=>{
+  try{if(AC&&AC.state==='suspended')AC.resume();}catch(e){}
+  if(audioOn)return;audioOn=true;AUD.src=SILENT;AUD.play().catch(()=>{});
+});
+
+// ---------- Answer board + sound effects ----------
+let shownRv=0,doneRv=0,sfxGuess=0;
+const OV=document.getElementById('ov');
+// Built-in reveal sounds (w = wave, s = [frequency, start time] notes, d = note length)
+const SFX={
+  win:{n:'Victory jingle',w:'triangle',s:[[523,0],[659,.12],[784,.24],[1047,.36]],d:.3},
+  fanfare:{n:'Fanfare',w:'triangle',s:[[523,0],[523,.12],[523,.24],[659,.38],[784,.55],[1047,.75]],d:.3},
+  chime:{n:'Chime',w:'sine',s:[[1319,0],[1760,.18]],d:.6},
+  none:{n:'Soft blip',w:'triangle',s:[[440,0],[330,.14]],d:.35},
+  miss:{n:'Wrong buzzer',w:'sawtooth',s:[[196,0],[147,.2]],d:.35},
+  sad:{n:'Sad trombone',w:'sawtooth',s:[[392,0],[370,.3],[349,.6],[330,.9]],d:.45},
+  off:{n:'No sound'}
+};
+function sfx(kind){
+  const x=SFX[kind];if(!x||!x.s)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    x.s.forEach(([f,t])=>{
+      const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+t;
+      o.type=x.w;o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,s);
+      g.gain.exponentialRampToValueAtTime(.25,s+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,s+x.d);
+      o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+x.d+.05);
+    });
+  }catch(e){}
+}
+function playFx(sound,url){   // a built-in sound, or the clip the host uploaded
+  try{FX.pause();}catch(e){}
+  if(sound==='custom'){if(url){FX.src=url;FX.currentTime=0;FX.play().catch(()=>{});}return;}
+  sfx(sound);
+}
+function syncOverlay(){
+  if(!G||G.phase!=='play'||!G.done||!G.rv){OV.className='';OV.innerHTML='';if(doneRv){doneRv=0;try{FX.pause();}catch(e){}}return;}   // moving on stops the reveal sound
+  if(G.rv!==doneRv){doneRv=G.rv;if(role==='host'||audioOn)playFx(G.rs||G.rk,G.ru);}   // sound once per reveal
+  if(G.rv===shownRv){OV.className='';return;}
+  const last=G.r===G.total-1;
+  OV.className='on';
+  OV.innerHTML=`<div class="ovb t${G.rt>=0?G.rt:''}"><small class="mute">The answer was</small><div class="answer">${esc(G.answer||'')}</div>
+    <p>${esc(G.msg||'')}</p><div class="btns" style="justify-content:center">${role==='host'?`<button class="gold" data-ov="next">${last?'See final scores':'Next question'}</button>`:''}<button class="ghost" data-ov="close">Close</button></div></div>`;
+}
+OV.addEventListener('click',e=>{
+  const b=e.target.closest('[data-ov]');
+  if(e.target===OV||(b&&b.dataset.ov==='close')){shownRv=G?G.rv:0;OV.className='';return;}
+  if(b&&b.dataset.ov==='next'){shownRv=G.rv;OV.className='';run('next');}
+});
+function guessSfx(){   // buzz when the host marks a guess wrong but the question continues
+  const L=G&&G.last;if(!L||L.open||L.pts>0||G.done||L.n===sfxGuess)return;
+  sfxGuess=L.n;if(role==='host'||audioOn)sfx('miss');
+}
+
+// ---------- Persistence / sync ----------
+const strip=c=>({rounds:c.rounds.map(r=>({title:r.title,questions:r.questions.map(q=>({answers:q.answers,reveal:q.reveal,hints:q.hints.map(h=>h.local?{name:'',url:'',pts:h.pts}:h)}))})),fx:c.fx});
+function savePrivate(){if(role==='host')ls('gs_cfg_'+code,JSON.stringify(strip(C)));}
+
+// ---------- Presets: saved in this browser; their audio clips are pinned on the server ----------
+const loadPresets=()=>{try{const a=JSON.parse(ls('gs_presets')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}};
+const findPreset=id=>loadPresets().find(p=>p.id===id);
+// Clips are Vercel Blob URLs (https://<store>.public.blob.vercel-storage.com/clips/...). The full URL is the clip's id.
+const clipIds=(rounds,fx)=>{const s=new Set(),add=u=>{if(/^https:\/\/[^\/]+\.public\.blob\.vercel-storage\.com\/clips\//.test(u||''))s.add(u);};
+  rounds.forEach(r=>r.questions.forEach(q=>{q.hints.forEach(h=>add(h.url));add(q.reveal&&q.reveal.url);}));
+  if(fx)Object.keys(fx).forEach(k=>add(fx[k]&&fx[k].url));
+  return[...s];};
+// keepalive lets the request finish even if the tab is closed or navigated away right after saving
+const pinApi=(p,ids)=>ids.length?fetch(p,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})}).then(r=>{if(!r.ok)throw new Error(p);return r.json();}):Promise.resolve({missing:[]});
+function releaseClips(oldIds){  // unpin clips that no remaining preset uses
+  const used=new Set();loadPresets().forEach(p=>clipIds(p.rounds,p.fx).forEach(i=>used.add(i)));
+  return pinApi('/unpin',oldIds.filter(i=>!used.has(i))).catch(()=>{});
+}
+const psMsgHtml=()=>psMsg?`<p class="${psMsg.startsWith('ok:')?'okmsg':'warn'}">${esc(psMsg.slice(psMsg.indexOf(':')+1))}</p>`:'';
+// Warn before the tab closes while a pin or an upload is still in flight
+window.addEventListener('beforeunload',e=>{if(pending>0||uploading>0){e.preventDefault();e.returnValue='';}});
+function saveAll(){savePrivate();if(db&&role==='host'&&G&&G.phase==='lobby')db.doc('games/'+code).set(G).catch(()=>{});}
+function commit(){
+  if(G.phase==='play'&&cur())G.hints=hintUrls().slice(0,G.shown);
+  db.doc('games/'+code).set(G).catch(()=>{});
+  if(G.phase==='play')applyAudio(G.seq,G.idx,G.hints);else stopAudio();
+  render();
+}
+function attach(){
+  subs.forEach(u=>{try{u();}catch(e){}});subs=[];plReady=false;PL=[];
+  subs.push(db.collection('games/'+code+'/players').onSnapshot(qs=>{
+    PL=qs.docs.map(d=>d.data()).filter(Boolean);plReady=true;
+    if(!(role==='host'&&screen==='edit'&&G&&G.phase==='lobby'))render();
+  }));
+  if(role==='player')subs.push(db.doc('games/'+code).onSnapshot(s=>{
+    G=s.exists?s.data():null;
+    if(G&&G.phase==='play')applyAudio(G.seq,G.idx,G.hints||[]);else stopAudio();
+    render();
+  }));
+  else{
+    let seen=false;const handled={};
+    subs.push(db.collection('games/'+code+'/moves').onSnapshot(qs=>{
+      const first=!seen;seen=true;
+      qs.docs.forEach(d=>{const x=d.data();if(!x||handled[x.pid]===x.n)return;handled[x.pid]=x.n;if(!first)onMove(x);});
+    }));
+  }
+}
+const send=(act,v='')=>{if(db&&G&&code)db.doc('games/'+code+'/moves/'+myId).set({pid:myId,act,v:String(v),q:G.r,n:Math.random()}).catch(()=>{});};
+
+// ---------- Game logic (host is the referee) ----------
+function nextQ(r){const f=flat(),c=f[r];Object.assign(G,{r,shown:1,tries:0,stage:'main',done:false,msg:'',answer:null,last:null,idx:0,seq:Date.now(),turn:r%2,label:qLabel(c),numHints:c.q.hints.length,pts:c.q.hints.map((h,j)=>ptsOf(c.q,j)),total:f.length,rv:0,rk:'',rt:-1,rs:'',ru:''});}
+// The answer only enters the shared game state here, at the moment of reveal.
+// The host's custom message and sound for this kind of reveal travel with it so every player hears and sees the same thing.
+function fin(m,k,t,p){
+  const f=(C.fx&&C.fx[k])||{},qr=cur().q.reveal||{};
+  const useQ=!!qr.sound&&qr.sound!=='default'&&!(qr.sound==='custom'&&!qr.url);   // this question's own reveal wins
+  G.done=true;G.stage='done';G.idx=-1;G.seq=Date.now();G.answer=ans(cur().q)[0]||'(no answer set)';
+  const txt=String(qr.text||'').trim()||String(f.text||'').trim();
+  G.msg=txt?txt.replace(/\{team\}/gi,t!=null&&t>=0?G.teams[t]:'').replace(/\{pts\}/gi,p||0).replace(/\{answer\}/gi,G.answer):m;
+  G.rv=Date.now();G.rk=k||'none';G.rt=t==null?-1:t;
+  G.rs=useQ?qr.sound:(f.sound||G.rk);G.ru=G.rs==='custom'?(useQ?qr.url:(f.url||'')):'';
+}
+function toSteal(){G.stage='steal';G.idx=-1;G.seq=Date.now();}
+function step(a,v,t,name){
+  const q=cur().q;
+  if(a==='hint'){if(G.stage==='main'&&G.shown<G.numHints){G.shown++;G.idx=G.shown-1;G.seq=Date.now();}}
+  else if(a==='play'){v=+v;if(v>=0&&v<G.shown){const u=new URL(q.hints[v].url||'x',location.href).href;G.idx=(!AUD.paused&&AUD.src===u)?-1:v;G.seq=Date.now();}}
+  else if(a==='stop'){G.idx=-1;G.seq=Date.now();}
+  else if(a==='giveup'){if(G.stage==='main')toSteal();}
+  else if(a==='guess'){
+    // Guesses are not auto-scored: the host sees the guess and picks the points.
+    // Whether it matches is NOT stored in shared state (that would leak the answer to players).
+    if(G.last&&G.last.open)return;
+    const text=String(v).trim().slice(0,80);if(!text)return;
+    G.last={team:t,name,text,open:true,pts:0,n:Date.now()};
+  }
+}
+function onMove(x){
+  if(!G||G.phase!=='play'||G.done||x.q!==G.r)return;
+  const p=PL.find(p=>p.id===x.pid);if(!p)return;
+  const ctl=G.stage==='main'?G.turn:1-G.turn;
+  if(p.team!==ctl||!['hint','giveup','guess'].includes(x.act))return;
+  step(x.act,x.v,p.team,p.name);commit();
+}
+const ix=v=>String(v).split('.').map(Number);
+const edit=fn=>v=>{fn(ix(v));saveAll();};
+async function newGame(p,scr){
+  let c,n=0;
+  do{c=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
+    let s;try{s=await db.doc('games/'+c).get();}catch(e){break;}
+    if(!s.exists)break;}while(++n<8);
+  code=c;role='host';screen=scr;shownRv=0;doneRv=0;sfxGuess=0;
+  C=p?{rounds:JSON.parse(JSON.stringify(p.rounds)),fx:JSON.parse(JSON.stringify(p.fx||{}))}:{rounds:[{title:'Round 1',questions:[newQ()]}],fx:FXD()};
+  fixFx();
+  presetId=p?p.id:null;presetName=p?p.name:'';psMsg='';
+  G={phase:'lobby',host:myId,teams:p?p.teams.slice():['Team A','Team B'],maxTries:3,scores:[0,0]};
+  await db.doc('games/'+c).set(G);savePrivate();
+  ls('gs_pre_'+c,presetId?JSON.stringify({id:presetId,name:presetName}):'');
+  ls('gs_host',c);attach();render();
+}
+const G_ACTS=new Set(['start','hint','award','reveal','judge','next','again','toEdit','toLobby']);
+const actions={
+  async create(){return newGame(null,'edit');},
+  async playPreset(v){
+    const p=findPreset(v);if(!p)return;
+    // Re-pin the clips and check they're still on the server before opening the lobby
+    let missing=0,failed=false;
+    try{const j=await pinApi('/pin',clipIds(p.rounds,p.fx));missing=(j&&j.missing&&j.missing.length)||0;}catch(e){failed=true;}
+    await newGame(p,'lobby');
+    if(missing)psMsg='err:Heads up: '+missing+' audio clip'+(missing===1?' in this preset has':'s in this preset have')+' expired on the server. Open the editor, re-upload '+(missing===1?'it':'them')+' and press Update preset.';
+    else if(failed)psMsg='err:Couldn’t check this preset’s audio clips with the server. They may not play.';
+    render();
+  },
+  editPreset(v){const p=findPreset(v);if(p)return newGame(p,'edit');},
+  delPreset(v){
+    const all=loadPresets(),p=all.find(x=>x.id===v);
+    if(!p||!confirm('Delete the preset “'+p.name+'”? This can’t be undone.'))return;
+    ls('gs_presets',JSON.stringify(all.filter(x=>x.id!==v)));
+    releaseClips(clipIds(p.rounds,p.fx));
+  },
+  savePreset(v){
+    const name=presetName.trim().slice(0,40);
+    if(!name){psMsg='err:Give the preset a name first.';return;}
+    if(uploading>0||JSON.stringify(C).includes('Uploading…')){psMsg='err:An upload is still running. Wait for it to finish, then save.';return;}
+    const all=loadPresets(),i=presetId&&v!=='new'?all.findIndex(p=>p.id===presetId):-1;
+    const sp=strip(C),rounds=sp.rounds,fx=JSON.parse(JSON.stringify(sp.fx)),old=i>=0?clipIds(all[i].rounds,all[i].fx):[];
+    const p={id:i>=0?presetId:Math.random().toString(36).slice(2,10),name,teams:G.teams.slice(),rounds,fx,t:Date.now()};
+    if(i>=0)all[i]=p;else all.push(p);
+    const str=JSON.stringify(all);ls('gs_presets',str);
+    if(ls('gs_presets')!==str){psMsg='err:Couldn’t save in this browser (storage is blocked or full).';return;}
+    presetId=p.id;presetName=name;ls('gs_pre_'+code,JSON.stringify({id:p.id,name}));
+    pending++;
+    psMsg='ok:Saving audio clips… keep this tab open for a moment.';
+    pinApi('/pin',clipIds(rounds,fx)).then(j=>{
+      psMsg=(j&&j.missing&&j.missing.length)
+        ?'err:Saved, but '+j.missing.length+' audio clip'+(j.missing.length===1?' has':'s have')+' expired on the server. Re-upload '+(j.missing.length===1?'it':'them')+', then press Update preset.'
+        :'ok:Saved “'+name+'” with its audio. You’ll find it on the home screen.';
+      return releaseClips(old);
+    }).catch(()=>{psMsg='err:Saved, but the server couldn’t keep the audio clips. Press Update preset again when you’re connected.';})
+      .finally(()=>{pending--;render();});
+  },
+  async resume(){
+    const c=ls('gs_host');
+    try{const s=await db.doc('games/'+c).get();
+      if(!s.exists||s.data().host!==myId)throw 0;
+      const p=ls('gs_cfg_'+c);
+      try{const o=JSON.parse(ls('gs_pre_'+c)||'null');presetId=o?o.id:null;presetName=o?o.name:'';}catch(e){presetId=null;presetName='';}
+      psMsg='';shownRv=0;doneRv=0;sfxGuess=0;
+      if(p)C=JSON.parse(p);fixFx();G=s.data();code=c;role='host';screen='edit';attach();
+    }catch(e){joinErr='That game is no longer available.';ls('gs_host','');}
+    render();
+  },
+  async joinCode(){
+    const c=(document.getElementById('code').value||'').trim().toUpperCase();joinErr='';
+    if(c.length!==4){joinErr='Enter the 4-letter code.';return;}
+    try{const s=await db.doc('games/'+c).get();
+      if(!s.exists)joinErr='No game with that code.';
+      else{G=s.data();code=c;role='player';shownRv=0;doneRv=0;sfxGuess=0;attach();}
+    }catch(e){joinErr='Could not reach the game. Check your connection and try again.';}
+    render();
+  },
+  joinTeam(v){
+    const me=PL.find(p=>p.id===myId),el=document.getElementById('uname');
+    const name=((el?el.value:me&&me.name)||'').trim().slice(0,20);
+    if(!name){joinErr='Enter a name first.';return;}
+    joinErr='';myName=name;ls('gs_name',name);
+    PL=PL.filter(p=>p.id!==myId).concat({id:myId,name,team:+v});
+    db.doc('games/'+code+'/players/'+myId).set({id:myId,name,team:+v}).catch(()=>{});
+  },
+  leave(){subs.forEach(u=>{try{u();}catch(e){}});subs=[];role=null;code='';G=null;PL=[];joinErr='';presetId=null;presetName='';psMsg='';stopAudio();},
+  // host
+  toEdit(){screen='edit';G.phase='lobby';},
+  toLobby(){screen='lobby';saveAll();},
+  start(){
+    if(!flat().length){noq=true;return;}
+    noq=false;saveAll();G.phase='play';G.scores=[0,0];nextQ(0);
+  },
+  hint:()=>step('hint'),
+  lplay(v){
+    const urls=role==='host'?hintUrls():(G.hints||[]),url=urls[+v];
+    if(!url)return;
+    const abs=new URL(url,location.href).href;
+    if(!AUD.paused&&AUD.src===abs){AUD.pause();return;}   // tap again to stop
+    audioOn=true;AUD.src=url;AUD.play().catch(()=>{});
+  },
+  stop(){stopAudio();},
+  award(v){if(G.done)return;const t=+v,p=avail();G.scores[t]+=p;fin(`${G.teams[t]} was awarded ${p} point${p===1?'':'s'}.`,'win',t,p);},
+  reveal(){if(!G.done)fin('Answer revealed. No points.','none');},
+  // host picks the point value for the player's typed answer (0 = wrong)
+  judge(v){
+    const L=G.last;if(G.done||!L||!L.open)return;
+    const pts=+v;L.open=false;L.pts=pts;
+    if(pts>0){G.scores[L.team]+=pts;fin(`${G.teams[L.team]} ${G.stage==='steal'?'stole':'scored'} ${pts} point${pts===1?'':'s'}.`,'win',L.team,pts);}
+    else if(G.stage==='steal')fin('The steal missed. No points.','miss');
+    else if(++G.tries>=G.maxTries)toSteal();
+  },
+  next(){if(G.r+1>=G.total){G.phase='final';G.idx=-1;G.seq=Date.now();}else nextQ(G.r+1);},
+  again(){G.phase='play';G.scores=[0,0];nextQ(0);},
+  addRound(){C.rounds.push({title:'Round '+(C.rounds.length+1),questions:[newQ()]});saveAll();},
+  delRound:edit(([i])=>{C.rounds.splice(i,1);}),
+  addQ:edit(([i])=>{const q=C.rounds[i].questions;q.push(newQ(q.length?q[q.length-1].hints.length||3:3));}),
+  delQ:edit(([i,k])=>{C.rounds[i].questions.splice(k,1);}),
+  addHint:edit(([i,k])=>{const q=C.rounds[i].questions[k];const last=q.hints.length?ptsOf(q,q.hints.length-1):2;q.hints.push({name:'',url:'',pts:Math.max(1,last-1)});}),
+  copyPts:edit(([i,k])=>{const src=C.rounds[i].questions[k];C.rounds[i].questions.forEach(q=>q.hints.forEach((h,j)=>{if(j<src.hints.length)h.pts=ptsOf(src,j);}));}),
+  delHint:edit(([i,k,j])=>{C.rounds[i].questions[k].hints.splice(j,1);}),
+  rmclip:edit(([i,k,j])=>{const h=C.rounds[i].questions[k].hints[j];C.rounds[i].questions[k].hints[j]={name:'',url:'',pts:h.pts};}),
+  // per-question reveal
+  prevqfx(v){const[i,k]=ix(v),r=C.rounds[i].questions[k].reveal;audioOn=true;if(r.sound==='default'){const f=C.fx.win;playFx(f.sound,f.url);}else playFx(r.sound,r.url);},
+  rmqfx(v){const[i,k]=ix(v),r=C.rounds[i].questions[k].reveal;r.url='';r.name='';if(r.sound==='custom')r.sound='default';saveAll();},
+  // reveal sound editor
+  prevfx(v){const f=C.fx[v];audioOn=true;playFx(f.sound,f.url);},
+  rmfx(v){const f=C.fx[v];f.url='';f.name='';if(f.sound==='custom')f.sound=v;saveAll();},
+  // players
+  pmove(v){const[a,x]=v.split(':');send(a,x===undefined?'':x);},
+  guess(){const e=document.getElementById('guess');if(e&&e.value.trim()){send('guess',e.value);e.value='';}},
+  giveup(){send('giveup');}
+};
+function run(a,v){
+  const r=actions[a](v);
+  if(G_ACTS.has(a)&&G&&role==='host')commit();else render();
+  return r;
+}
+async function upload(i,k,j,file){
+  const keep=C.rounds[i].questions[k].hints[j].pts,set=h=>{C.rounds[i].questions[k].hints[j]={...h,pts:keep};};
+  set({name:'Uploading…',url:''});uploading++;render();
+  let h;
+  try{const res=await assets.upload(file);h={name:file.name,url:res.url};}
+  catch(e){h={name:'Upload failed, try again',url:''};}
+  uploading--;set(h);render();savePrivate();
+}
+async function uploadQfx(i,k,file){
+  const r=C.rounds[i].questions[k].reveal;r.name='Uploading…';uploading++;render();
+  try{const res=await assets.upload(file);r.url=res.url;r.name=file.name;r.sound='custom';}
+  catch(e){r.url='';r.name='Upload failed, try again';}
+  uploading--;render();savePrivate();
+}
+async function uploadFx(k,file){
+  const f=C.fx[k];f.name='Uploading…';uploading++;render();
+  try{const res=await assets.upload(file);f.url=res.url;f.name=file.name;f.sound='custom';}
+  catch(e){f.url='';f.name='Upload failed, try again';}
+  uploading--;render();savePrivate();
+}
+
+// ---------- Views ----------
+function board(){
+  const ctlT=G.phase==='play'&&!G.done?(G.stage==='main'?G.turn:1-G.turn):-1;
+  return `<div class="score">${[0,1].map(i=>{
+    const names=PL.filter(p=>p.team===i).map(p=>esc(p.name)).join(', ');
+    return `<div class="ent e${i} ${ctlT===i?'live':''}"><small>${esc(G.teams[i])}</small><b>${G.scores?G.scores[i]:0}</b><small>${names||'No players yet'}</small>${ctlT===i?`<small>${G.stage==='steal'?'⚔ Steal attempt':'★ Turn'}</small>`:''}</div>`;}).join('')}</div>`;
+}
+const ptsTag=j=>G&&G.pts&&G.pts[j]!=null?` <span class="mute"> · ${G.pts[j]} pts</span>`:'';
+function hintCards(urls,total,act){
+  let h='';
+  for(let j=0;j<total;j++){
+    h+=j<urls.length
+      ?(urls[j]?`<div class="hint" data-url="${esc(urls[j])}">${act?`<button class="pbtn" data-act="${act}" data-v="${j}" aria-label="Play hint ${j+1}">▶</button>`:'<span class="pbtn" style="opacity:.55">▶</span>'}<div style="flex:1"><b>Hint ${j+1}</b>${ptsTag(j)}<progress value="0" max="1"></progress></div></div>`
+               :`<div class="hint hid">Hint ${j+1}: no clip uploaded</div>`)
+      :`<div class="hint hid">Hint ${j+1} is locked${ptsTag(j)}</div>`;
+  }
+  return h;
+}
+function lastGuess(host){
+  const L=G.last;if(!L)return '';
+  const r=L.open?(host?'waiting for your points below':'waiting for the host to judge…'):(L.pts>0?'✓ +'+L.pts+' pts':'✗');
+  return `<p class="note">Last guess: ${esc(L.name)} (${esc(G.teams[L.team])}) said “${esc(L.text)}” · ${r}</p>`;
+}
+function judgeV(){
+  const L=G.last;if(G.done||!L||!L.open)return '';
+  // Host-only: computed locally from the host's own answer list, never synced to players.
+  const sug=avail(),ok=ans(cur().q).map(norm).includes(norm(L.text));
+  return `<div class="card"><h3>${esc(L.name)} (${esc(G.teams[L.team])}) answered:</h3>
+    <div class="answer" style="padding:8px">${esc(L.text)}</div>
+    <p class="${ok?'':'warn'}">${ok?'✓ Matches an accepted answer':'✗ Doesn’t match any accepted answer'} · ${G.shown} of ${G.numHints} hints used</p>
+    <div class="btns">${[...new Set(G.pts||Array.from({length:G.numHints},(_,i)=>i+1))].sort((a,b)=>b-a).filter(v=>v>0).map(v=>`<button class="${v===sug?'gold':'ok'}" data-act="judge" data-v="${v}">+${v}</button>`).join('')}<button class="no" data-act="judge" data-v="0">Wrong</button></div></div>`;
+}
+function statusLine(can){
+  if(G.done)return '';
+  const you=can===undefined?'':can?' <b>Your team can answer.</b>':' You’re watching.';
+  return G.stage==='main'
+    ?`<p><b>${esc(G.teams[G.turn])}</b> is up. Guess ${Math.min(G.tries+1,G.maxTries)} of ${G.maxTries}.${you}</p>`
+    :`<p><b>${esc(G.teams[1-G.turn])}</b> gets one chance to steal!${you}</p>`;
+}
+function finalV(host){
+  const s=G.scores,w=s[0]===s[1]?'It’s a tie!':'Winner: '+esc(G.teams[s[0]>s[1]?0:1]);
+  $app.innerHTML=`<h1>Final Scores</h1><div class="answer">${w}</div>${board()}${host?'<div class="btns"><button class="gold" data-act="again">Play again</button><button class="ghost" data-act="toEdit">Edit rounds</button></div>':''}`;
+}
+function presetsCard(){
+  const a=loadPresets();if(!a.length)return '';
+  const n=(x,w)=>x+' '+w+(x===1?'':'s');
+  return `<div class="card"><h2>My presets</h2><p class="mute">Saved on this device. Play one to open a fresh lobby, or edit it first.</p>${a.map(p=>{
+    const nq=p.rounds.reduce((t,r)=>t+r.questions.length,0);
+    return `<div class="pre"><div><b>${esc(p.name)}</b><div class="mute">${n(p.rounds.length,'round')}, ${n(nq,'question')}</div></div>
+      <div class="btns" style="margin:0"><button class="gold rm" data-act="playPreset" data-v="${esc(p.id)}">Play</button><button class="ghost rm" data-act="editPreset" data-v="${esc(p.id)}">Edit</button><button class="del rm" data-act="delPreset" data-v="${esc(p.id)}">Delete</button></div></div>`;}).join('')}</div>`;
+}
+function home(){
+  const hash=(location.hash||'').slice(1),pre=/^[A-Za-z]{4}$/.test(hash)?hash.toUpperCase():'',res=ls('gs_host');
+  $app.innerHTML=`<h1>Music Gameshow</h1><p class="note">Host your own game or join a friend’s with a code.</p>
+    <div class="row"><div class="card"><h2>Create a game</h2><p class="mute">You’ll be the admin: build the rounds, share the code and referee the show.</p>
+      <div class="btns"><button class="gold" data-act="create">Create game</button>${res?`<button class="ghost" data-act="resume">Resume ${esc(res)}</button>`:''}</div></div>
+    <div class="card"><h2>Join a game</h2><label for="code">Game code</label><input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" value="${esc(pre)}" placeholder="ABCD">
+      <div class="btns"><button data-act="joinCode">Join</button></div></div></div>${presetsCard()}${joinErr?`<p class="warn">${esc(joinErr)}</p>`:''}`;
+}
+function qfxBlock(i,k,q){
+  const f=q.reveal,id=i+'.'+k;
+  return `<div class="rd"><h3>Answer reveal for this question</h3>
+    <p class="note">Plays when this question’s answer is revealed, e.g. upload the full song. Leave it on Default to use the settings in the Answer reveal card above.</p>
+    <label>Sound</label><select data-bind="C.rounds.${i}.questions.${k}.reveal.sound"><option value="default" ${f.sound==='default'?'selected':''}>Default</option>${Object.keys(SFX).map(s=>`<option value="${s}" ${f.sound===s?'selected':''}>${SFX[s].n}</option>`).join('')}<option value="custom" ${f.sound==='custom'?'selected':''}>My own clip${f.url?'':' (upload below)'}</option></select>
+    <label>Message (use {team}, {pts}, {answer})</label><input data-bind="C.rounds.${i}.questions.${k}.reveal.text" maxlength="120" value="${esc(f.text)}" placeholder="Default message">
+    <label>Reveal clip (e.g. the full song)</label>
+    ${f.url?`<p class="note">${esc(f.name)}</p><audio controls src="${esc(f.url)}"></audio><button class="ghost rm" style="margin-top:6px" data-act="rmqfx" data-v="${id}">Remove clip</button>`:`${f.name?`<p class="note">${esc(f.name)}</p>`:''}<input type="file" accept="audio/*" data-upqfx="${id}">`}
+    <div class="btns"><button class="ghost rm" data-act="prevqfx" data-v="${id}">▶ Preview sound</button></div></div>`;
+}
+function fxCard(){
+  return `<div class="card"><h2>Answer reveal (defaults)</h2>
+    <p class="note">Used for any question that doesn’t have its own reveal sound or message (set those under each question). Choose the sound and message shown when the answer is revealed. In a message you can use <b>{team}</b>, <b>{pts}</b> and <b>{answer}</b>. Leave a message empty to use the default shown in grey.</p>
+    ${Object.keys(FXL).map(k=>{const f=C.fx[k];return `<div class="rd"><h3>${FXL[k][0]}</h3><p class="note">${FXL[k][1]}</p>
+      <label>Sound</label><select data-bind="C.fx.${k}.sound">${Object.keys(SFX).map(s=>`<option value="${s}" ${f.sound===s?'selected':''}>${SFX[s].n}</option>`).join('')}<option value="custom" ${f.sound==='custom'?'selected':''}>My own clip${f.url?'':' (upload below)'}</option></select>
+      <label>Message</label><input data-bind="C.fx.${k}.text" maxlength="120" value="${esc(f.text)}" placeholder="${esc(FXT[k])}">
+      <label>Upload your own sound (optional)</label>
+      ${f.url?`<p class="note">${esc(f.name)}</p><audio controls src="${esc(f.url)}"></audio><button class="ghost rm" style="margin-top:6px" data-act="rmfx" data-v="${k}">Remove clip</button>`:`${f.name?`<p class="note">${esc(f.name)}</p>`:''}<input type="file" accept="audio/*" data-upfx="${k}">`}
+      <div class="btns"><button class="ghost rm" data-act="prevfx" data-v="${k}">▶ Preview sound</button></div></div>`;}).join('')}</div>`;
+}
+function renderEditor(){
+  const nq=C.rounds.reduce((n,r)=>n+r.questions.length,0);
+  $app.innerHTML=`<div class="top"><h1>Round Editor</h1><span class="pts">Code ${code}</span></div>
+    <p class="note">Players can join with this code at any time. Answers never leave your browser.</p>
+    <div class="card"><h2>Teams</h2><div class="row">${[0,1].map(i=>`<div><label>Team ${i+1} name</label><input data-bind="G.teams.${i}" value="${esc(G.teams[i])}"></div>`).join('')}</div></div>
+    <div class="card"><h2>Preset</h2>
+      <p class="note">${presetId?'You’re editing a saved preset. Your changes only reach it when you press Update preset.':'Save this show to reuse it later. Presets appear on the home screen.'}</p>
+      <label for="pname">Preset name</label><input id="pname" maxlength="40" value="${esc(presetName)}" placeholder="Friday night 90s">
+      <div class="btns"><button class="gold" data-act="savePreset">${presetId?'Update preset':'Save preset'}</button>${presetId?'<button class="ghost" data-act="savePreset" data-v="new">Save as new preset</button>':''}</div>${psMsgHtml()}</div>
+    ${fxCard()}
+    ${C.rounds.map((r,i)=>`<div class="card"><div class="sp"><h2 style="margin:0">Round ${i+1}</h2><button class="del rm" data-act="delRound" data-v="${i}">Delete round</button></div>
+      <label>Round name</label><input data-bind="C.rounds.${i}.title" value="${esc(r.title)}">
+      ${r.questions.map((q,k)=>`<div class="q"><div class="sp"><h3>Question ${k+1}</h3><button class="del rm" data-act="delQ" data-v="${i}.${k}">Delete question</button></div>
+        <label>Accepted answers (one per line, capitalisation doesn’t matter)</label>
+        <textarea rows="3" data-bind="C.rounds.${i}.questions.${k}.answers" placeholder="Bohemian Rhapsody&#10;Bohemian Rapsody">${esc(q.answers)}</textarea>
+        <p class="note">The first line is shown as the answer. Add other spellings or nicknames on extra lines.</p>
+        ${q.hints.map((h,j)=>`<div class="rd"><div class="sp"><label style="margin:0">Hint ${j+1}${h.name?`: ${esc(h.name)}`:''}</label><button class="del rm" data-act="delHint" data-v="${i}.${k}.${j}">Delete hint</button></div>
+          <div class="sp" style="margin-top:6px"><label style="margin:0">Points if solved on this hint</label><input type="number" min="0" step="1" style="max-width:110px" data-bind="C.rounds.${i}.questions.${k}.hints.${j}.pts" value="${ptsOf(q,j)}"></div>
+          ${h.url?`<audio controls src="${esc(h.url)}"></audio><button class="ghost rm" style="margin-top:6px" data-act="rmclip" data-v="${i}.${k}.${j}">Remove clip</button>`:`<input type="file" accept="audio/*" data-up="${i}.${k}.${j}">`}</div>`).join('')}
+        ${qfxBlock(i,k,q)}
+        <div class="btns"><button class="ghost" data-act="addHint" data-v="${i}.${k}">+ Add hint</button><button class="ghost" data-act="copyPts" data-v="${i}.${k}">Use these points for the whole round</button></div></div>`).join('')}
+      <div class="btns"><button class="ghost" data-act="addQ" data-v="${i}">+ Add question</button></div></div>`).join('')}
+    <div class="btns"><button class="ghost" data-act="addRound">+ Add round</button></div>
+    <p class="note">${C.rounds.length} round${C.rounds.length===1?'':'s'}, ${nq} question${nq===1?'':'s'}.</p>
+    <div class="btns"><button class="gold" data-act="toLobby">Go to lobby</button></div>`;
+}
+function lobbyV(){
+  $app.innerHTML=`<div class="top"><h1>Lobby</h1><span class="pts">Code ${code}</span></div>
+    <p class="note">Players open this page, choose “Join a game”, enter the code, then pick a name and a team.</p>${board()}
+    ${noq?'<p class="warn">Add at least one question with a hint before starting.</p>':''}${psMsgHtml()}
+    <div class="btns"><button class="ghost" data-act="toEdit">Back to editor</button><button class="gold" data-act="start">Start the show</button></div>`;
+}
+function hostPlay(){
+  const c=cur();if(!c)return $app.innerHTML='<p class="warn">Questions changed. Go back to the editor.</p><div class="btns"><button data-act="toEdit">Editor</button></div>';
+  const last=G.r===G.total-1,main=G.stage==='main';
+  const b=G.done?`<div class="btns"><button class="gold" data-act="next">${last?'See final scores':'Next question'}</button></div>`
+    :`<div class="btns"><button class="gold" data-act="hint" ${!main||G.shown>=G.numHints?'disabled':''}>Reveal next hint (Space)</button><button class="ghost" data-act="stop">Stop sound</button>
+      ${[0,1].map(i=>`<button class="e${i}" data-act="award" data-v="${i}">Award ${esc(G.teams[i])} (+${avail()})</button>`).join('')}<button class="ghost" data-act="reveal">Reveal answer</button></div>`;
+  $app.innerHTML=`<div class="top"><h1>${esc(G.label)}</h1><span class="pts">${G.done?'':avail()+' pts'}</span></div>
+    <p class="note">Question ${G.r+1} of ${G.total} · Join code ${code}</p>${statusLine()}${board()}
+    <div class="card">${hintCards(hintUrls().slice(0,G.shown),G.numHints,'lplay')}${G.done?`<div class="answer">${esc(G.answer)}</div><p class="mute" style="text-align:center">${esc(G.msg)}</p>`:''}</div>
+    ${lastGuess(true)}${judgeV()}${b}<p class="note">Host only: accepted answers are ${ans(c.q).map(a=>'“'+esc(a)+'”').join(', ')||'none set'}. Players type guesses and you choose the points.</p>`;
+  paint();
+}
+function playerV(){
+  if(!plReady)return $app.innerHTML='<p class="mute">Loading…</p>';
+  const me=PL.find(p=>p.id===myId);
+  if(!me)return $app.innerHTML=`<h1>Join game ${esc(code)}</h1><label for="uname">Your name</label><input id="uname" maxlength="20" autocomplete="nickname" value="${esc(myName)}">
+    <p class="mute" style="margin-top:14px">Pick your team:</p><div class="btns">${G.teams.map((t,i)=>`<button class="e${i}" data-act="joinTeam" data-v="${i}">${esc(t)}</button>`).join('')}</div>
+    ${joinErr?`<p class="warn">${esc(joinErr)}</p>`:''}<div class="btns"><button class="ghost" data-act="leave">Back</button></div>`;
+  if(G.phase==='final')return finalV(false);
+  const t=me.team;
+  if(G.phase==='lobby')return $app.innerHTML=`<h1>You’re in!</h1><p>You’re <b>${esc(me.name)}</b> on <b>${esc(G.teams[t])}</b>. Waiting for the host to start. Keep this tab open.</p>${board()}
+    <div class="btns"><button class="ghost" data-act="joinTeam" data-v="${1-t}">Switch to ${esc(G.teams[1-t])}</button></div>`;
+  const ctl=G.done?-1:(G.stage==='main'?G.turn:1-G.turn),can=t===ctl,main=G.stage==='main';
+  const ctrl=can&&!(G.last&&G.last.open)?`<div class="card"><input id="guess" placeholder="${main?'Type your guess':'Type your steal'}" autocomplete="off"><div class="btns"><button class="gold" data-act="guess">${main?'Submit guess':'Steal!'}</button>
+    ${main?`<button class="ghost" data-act="pmove" data-v="hint" ${G.shown>=G.numHints?'disabled':''}>Reveal next hint</button>`:''}<button class="ghost" data-act="stop">Stop sound</button>${main?'<button class="no" data-act="giveup">Give up</button>':''}</div></div>`:'';
+  $app.innerHTML=`<div class="top"><h1>${esc(G.label)}</h1><span class="pts">${G.done?'':avail()+' pts'}</span></div>
+    <p class="note">Question ${G.r+1} of ${G.total} · You: ${esc(me.name)} (${esc(G.teams[t])})</p>${statusLine(can)}${board()}
+    <div class="card">${hintCards(G.hints||[],G.numHints,'lplay')}${G.done?`<div class="answer">${esc(G.answer||'')}</div><p class="mute" style="text-align:center">${esc(G.msg)}</p>`:''}</div>${lastGuess()}${ctrl}`;
+  paint();
+}
+function view(){
+  if(!ready)return $app.innerHTML='<p class="mute">Loading…</p>';
+  if(!role)return home();
+  if(!G)return $app.innerHTML='<h1>Game not found</h1><div class="btns"><button data-act="leave">Back</button></div>';
+  if(role==='host'){
+    if(G.phase==='play')return hostPlay();
+    if(G.phase==='final')return finalV(true);
+    return screen==='edit'?renderEditor():lobbyV();
+  }
+  playerV();
+}
+function render(){
+  const sv={},ae=document.activeElement&&document.activeElement.id,ids=['guess','uname','code','pname'];
+  ids.forEach(i=>{const e=document.getElementById(i);if(e)sv[i]=e.value;});
+  view();
+  ids.forEach(i=>{const e=document.getElementById(i);if(e&&i in sv){e.value=sv[i];if(i===ae)e.focus();}});
+  syncOverlay();guessSfx();
+}
+
+// ---------- Events ----------
+$app.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');
+  if(!t||/INPUT|SELECT|TEXTAREA/.test(t.tagName)||t.disabled)return;
+  run(t.dataset.act,t.dataset.v);
+});
+$app.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.up&&t.files[0]){const[i,k,j]=ix(t.dataset.up);upload(i,k,j,t.files[0]);}
+  if(t.dataset.upfx&&t.files[0])uploadFx(t.dataset.upfx,t.files[0]);
+  if(t.dataset.upqfx&&t.files[0]){const[i,k]=ix(t.dataset.upqfx);uploadQfx(i,k,t.files[0]);}
+});
+$app.addEventListener('input',e=>{
+  if(e.target.id==='pname'){presetName=e.target.value;return;}
+  const p=e.target.dataset.bind;if(!p)return;
+  const k=p.split('.'),l=k.pop();let o=k.shift()==='G'?G:C;k.forEach(x=>o=o[x]);o[l]=e.target.value;
+  clearTimeout(saveT);saveT=setTimeout(saveAll,800);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.id==='guess'){e.preventDefault();run('guess');return;}
+  if(role==='host'&&G&&G.phase==='play'&&!G.done&&e.key===' '&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)){e.preventDefault();run('hint');}
+});
+
+// ---------- Startup ----------
+function init(){
+  myId=ls('gs_id')||Math.random().toString(36).slice(2,10);ls('gs_id',myId);
+  myName=ls('gs_name')||'';
+  db=makeDb();
+  // Audio goes straight from the browser to Vercel Blob (functions can't take bodies over ~4.5 MB).
+  // /api/upload only hands out a short-lived upload token.
+  assets={upload:async f=>{
+    const {upload}=await import('https://esm.sh/@vercel/blob@0.27.3/client');
+    const safe=(f.name||'clip').replace(/[^\w.-]+/g,'_').slice(-60)||'clip';
+    const b=await upload('clips/'+safe,f,{access:'public',handleUploadUrl:'/api/upload',contentType:f.type&&f.type.startsWith('audio/')?f.type:'audio/mpeg'});
+    return{url:b.url};}};
+  ready=true;
+  // Re-pin every saved preset's clips each time the page opens so they never lapse while the preset exists
+  loadPresets().forEach(p=>pinApi('/pin',clipIds(p.rounds,p.fx)).catch(()=>{}));
+}
+init();
+render();
+})();
+</script>
+</body>
+</html>
