@@ -66,6 +66,6 @@ export default async function handler(req, res) {
     return res.status(400).end();
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ error: 'server' });
+    return res.status(500).json({ error: String((e && e.message) || e).slice(0, 200) });
   }
 }

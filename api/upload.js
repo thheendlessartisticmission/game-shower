@@ -1,10 +1,12 @@
 // Hands the browser a short-lived token so it can upload audio straight to Vercel Blob.
 import { handleUpload } from '@vercel/blob/client';
+import { blobToken } from '../lib/blob.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   try {
     const json = await handleUpload({
+      token: blobToken,
       body: req.body,
       request: req,
       onBeforeGenerateToken: async (pathname) => {

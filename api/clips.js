@@ -2,6 +2,7 @@
 // "Pinned" clips are listed in a Redis set; api/cleanup.js deletes old clips that aren't in it.
 import { head } from '@vercel/blob';
 import { redis } from '../lib/redis.js';
+import { blobToken } from '../lib/blob.js';
 
 const ok = (u) => {
   try {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
       await Promise.all(
         urls.map(async (u) => {
           try {
-            await head(u);
+            await head(u, { token: blobToken });
           } catch (e) {
             if (e && e.name === 'BlobNotFoundError') missing.push(u);
             else throw e;
