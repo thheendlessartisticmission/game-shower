@@ -655,12 +655,16 @@ function init(){
   myName=ls('gs_name')||'';
   db=makeDb();
   // Audio goes straight from the browser to Vercel Blob (functions can't take bodies over ~4.5 MB).
-  // /api/upload only hands out a short-lived upload token.
+  // /api/upload only hands out a short-lived presigned upload URL.
   assets={upload:async f=>{
-    const {upload}=await import('https://esm.sh/@vercel/blob@0.27.3/client');
-    const safe=(f.name||'clip').replace(/[^\w.-]+/g,'_').slice(-60)||'clip';
-    const b=await upload('clips/'+safe,f,{access:'public',handleUploadUrl:'/api/upload',contentType:f.type&&f.type.startsWith('audio/')?f.type:'audio/mpeg'});
-    return{url:b.url};}};
+    const ct=f.type&&f.type.startsWith('audio/')?f.type:'audio/mpeg';
+    const r=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:f.name,type:ct,size:f.size})});
+    if(!r.ok)throw new Error('upload');
+    const j=await r.json();
+    const p=await fetch(j.presignedUrl,{method:'PUT',headers:{'Content-Type':ct},body:f});
+    if(!p.ok)throw new Error('put');
+    let url=j.url;try{const b=await p.json();if(b&&b.url)url=b.url;}catch(e){}
+    return{url};}};
   ready=true;
   // Re-pin every saved preset's clips each time the page opens so they never lapse while the preset exists
   loadPresets().forEach(p=>pinApi('/pin',clipIds(p.rounds,p.fx)).catch(()=>{}));
